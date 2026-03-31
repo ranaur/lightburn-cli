@@ -1,0 +1,14 @@
+#!/bin/bash
+
+SCRIPT="${BASH_SOURCE[0]}"
+SCRIPT="$(readlink -f "$SCRIPT")"
+SCRIPT_DIR="$(dirname "$SCRIPT")"
+
+PYTHON="$(which python)" || PYTHON="$(which python3 >& /dev/null)" || {
+    echo "PYTHON must be installed!"
+    exit 1
+}
+
+python "$SCRIPT_DIR/src/main.py" "$@"
+exit $?
+
