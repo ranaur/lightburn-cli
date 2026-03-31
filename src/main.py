@@ -5,8 +5,15 @@ Lightburn CLI
 A modular CLI tool to validate Lightburn .lbrn2 files against configurable rules.
 """
 
-import argparse
 import sys
+from pathlib import Path
+
+# Add src directory to path for imports when running directly
+_src_dir = Path(__file__).parent
+if str(_src_dir) not in sys.path:
+    sys.path.insert(0, str(_src_dir))
+
+import argparse
 
 from commands import get_command_instances, get_command_names
 

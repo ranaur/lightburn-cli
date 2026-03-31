@@ -12,9 +12,13 @@ class ValidationLoader:
     """Loads validation rules from vrules directory."""
     
     def __init__(self, rules_dir: str = "vrules", custom_variables_path=None):
-        self.rules_dir = Path(rules_dir)
+        rules_dir = Path(rules_dir)
+        if rules_dir.is_absolute():
+            self.rules_dir = rules_dir
+        else:
+            self.rules_dir = Path(__file__).parent / rules_dir
         self.custom_variables_path = custom_variables_path
-        self._rules_cache: List[ValidationRule] = None
+        self._rules_cache: Optional[List[ValidationRule]] = None
     
     def load_all_rules(self) -> List[ValidationRule]:
         """Load all rules from the rules directory."""

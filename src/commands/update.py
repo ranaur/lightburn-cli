@@ -49,7 +49,7 @@ class UpdateCommand(BaseCommand):
         for param in args.parameters:
             if "=" not in param:
                 print(f"Error: Parameter '{param}' must be in format key=value")
-                return 1
+                return
             key, value = param.split("=", 1)
             params[key] = value
         
@@ -62,7 +62,7 @@ class UpdateCommand(BaseCommand):
             update_rules = update_loader.load_all_update_rules()
         except Exception as e:
             print(f"Error loading update rules: {e}")
-            return 1
+            return
         
         # Find the specified update rule
         update_rule = None
@@ -74,7 +74,7 @@ class UpdateCommand(BaseCommand):
         if not update_rule:
             print(f"Error: Update rule '{args.update_rule}' not found")
             print(f"Available update rules: {[rule.name for rule in update_rules]}")
-            return 1
+            return
         
         # Validate parameters
         errors = update_rule.validate_parameters(**params)
@@ -82,13 +82,13 @@ class UpdateCommand(BaseCommand):
             print("Parameter validation errors:")
             for error in errors:
                 print(f"  - {error}")
-            return 1
+            return
         
         # Check if file exists
         file_path = Path(args.file)
         if not file_path.exists():
             print(f"Error: File '{args.file}' not found")
-            return 1
+            return
 
         lightburn_file = LightburnFile(file_path)
 
@@ -124,6 +124,6 @@ class UpdateCommand(BaseCommand):
                 
         except Exception as e:
             print(f"Error applying update rule: {e}")
-            return 1
+            return
         
-        return 0
+        return

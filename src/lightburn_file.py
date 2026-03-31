@@ -14,12 +14,12 @@ class LightburnLayer:
         """Initialize Layer wrapper from XML element."""
         self.element = element
     
-    def _get_value(self, child_name: str) -> Optional[str]:
+    def _get_value(self, child_name: str, default: str = "") -> str:
         """Get Value attribute from a child element."""
         child = self.element.find(child_name)
         if child is not None:
-            return child.get("Value")
-        return None
+            return child.get("Value") or default
+        return default
 
     def _get_bool(self, child_name: str, truevalue: Optional[str], falsevalue: Optional[str]) -> bool:
         """Get Value attribute from a child element."""
@@ -85,33 +85,33 @@ class LightburnLayer:
 
     def get_speed(self) -> str:
         return self._get_value("speed")
-    def set_speed(self, value: str) -> str:
-        return self._set_value("speed", value)
+    def set_speed(self, value: str) -> None:
+        self._set_value("speed", value)
 
     def get_max_power(self) -> str:
         return self._get_value("maxPower")
-    def set_max_power(self, value: str) -> str:
+    def set_max_power(self, value: str) -> None:
         self._set_value("maxPower2", value)
-        return self._set_value("maxPower", value)
+        self._set_value("maxPower", value)
 
     def get_min_power(self) -> str:
         return self._get_value("minPower")
-    def set_min_power(self, value: str) -> str:
-        return self._set_value("minPower", value)
+    def set_min_power(self, value: str) -> None:
+        self._set_value("minPower", value)
 
-    def set_power(self, value: str) -> str:
+    def set_power(self, value: str) -> None:
         self.set_min_power(value)
-        return self.set_max_power(value)
+        self.set_max_power(value)
 
     def get_name(self) -> str:
         return self._get_value("name")
     def set_name(self, value: str) -> None:
-        return self._set_value("name", value)
+        self._set_value("name", value)
 
     def get_subname(self) -> str:
         return self._get_value("subname")
     def set_subname(self, value: str) -> None:
-        return self._set_value("subname", value)
+        self._set_value("subname", value)
     def get_tags(self):
         tags = []
         for part in self.get_subname().split(" "):
@@ -122,28 +122,28 @@ class LightburnLayer:
     def get_priority(self) -> str:
         return self._get_value("priority")
     def set_priority(self, value: str) -> None:
-        return self._set_value("priority", value)
+        self._set_value("priority", value)
 
     def get_index(self) -> str:
         return self._get_value("index")
     def set_index(self, value: str) -> None:
-        return self._set_value("index", value)
+        self._set_value("index", value)
 
     def _get_run_blower(self) -> bool:
-        return not self._get_bool("runBlower", "0", None)
+        return self._get_bool("runBlower", "0", None)
     def _set_run_blower(self, value: bool) -> bool:
-        return self._set_bool("runBlower", not value, "0")
+        self._set_bool("runBlower", value, "0", None)
     def blower_on(self) -> None:
         self._set_run_blower(True)
     def blower_off(self) -> None:
         self._set_run_blower(False)
     def blower(self) -> bool:
-        return self.get_run_blower()
+        return self._get_run_blower()
 
     def _get_hide(self) -> bool:
         return self._get_bool("hide", None, "1")
-    def _set_hide(self, value: bool) -> bool:
-        return self._set_bool("hide", value, None, "1")
+    def _set_hide(self, value: bool) -> None:
+        self._set_bool("hide", value, None, "1")
     def hide(self) -> None:
         self._set_hide(True)
     def show(self) -> None:
@@ -152,9 +152,9 @@ class LightburnLayer:
         return self._get_hide()
 
     def _get_do_output(self) -> bool:
-        return not self._get_bool("doOutput", "0", None)
+        return self._get_bool("doOutput", "0", None)
     def _set_do_output(self, value: bool) -> None:
-        self._set_bool("doOutput", False, "0", None)
+        self._set_bool("doOutput", value, "0", None)
     def enable(self) -> None:
         self._set_do_output(True)
     def disable(self) -> None:
@@ -194,18 +194,18 @@ class LightburnFile:
             raise ValueError(f"Failed to parse Lightburn file: {e}")
     
     def get_layers(self, 
-                     cut_type: Optional[str] = None,
-                     index: Optional[int] = None,
+                     layertype: Optional[str] = None,
+                     index: Optional[str] = None,
                      name: Optional[str] = None,
                      subname: Optional[str] = None) -> List[LightburnLayer]:
         """
         Get Layer elements from the file with optional filtering parameters.
         
         Args:
-            cut_type: Filter by Layer type (e.g., 'Cut', 'Fill')
+            layertype: Filter by Layer type (e.g., 'Cut', 'Fill')
             index: Filter by Layer index (0-based)
             name: Filter by Layer name attribute
-            subname: Filter by subname content (partial match)
+            subname: Filter by subname content
             
         Returns:
             List of LightburnLayer objects matching the criteria
@@ -218,28 +218,20 @@ class LightburnFile:
             cut_setting = LightburnLayer(element)
             
             # Apply filters
-            if cut_type is not None:
-                if element.get("type") != cut_type:
+            if layertype is not None:
+                if cut_setting.get_type() != layertype:
                     continue
             
             if index is not None:
-                # Find index in parent (assuming sequential order)
-                parent = element.parent
-                siblings = [child for child in parent.findall("CutSetting")]
-                try:
-                    current_index = siblings.index(element)
-                    if current_index != index:
-                        continue
-                except ValueError:
+                if cut_setting.get_index() != index:
                     continue
             
             if name is not None:
-                if element.get("name") != name:
+                if cut_setting.get_name() != name:
                     continue
             
             if subname is not None:
-                subname_value = cut_setting.get_value("subname")
-                if subname_value is None or subname not in subname_value:
+                if subname != cut_setting.get_subname():
                     continue
             
             cut_settings.append(cut_setting)
@@ -247,5 +239,5 @@ class LightburnFile:
         return cut_settings
     
     def write(self, file_path, encoding='utf-8', xml_declaration=True):
-        print(f"Writting: {file_path}")
+        print(f"Writing: {file_path}")
         self.tree.write(file_path, encoding=encoding, xml_declaration=xml_declaration)

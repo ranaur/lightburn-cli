@@ -40,16 +40,15 @@ class ValidationRule(ABC):
         self.enabled = enabled
     
     @abstractmethod
-    def validate(self, lightburn_file: LightburnFile, file_path: Path) -> ValidationResult:
+    def validate(self, lightburn_file: LightburnFile) -> List[ValidationResult]:
         """
         Validate the given XML data against this rule.
         
         Args:
-            xml_root: Parsed .lbrn2 file as LightburnFile object
-            file_path: Path to the original file
+            lightburn_file: Parsed .lbrn2 file as LightburnFile object
             
         Returns:
-            ValidationResult with the validation outcome
+            List of ValidationResult objects with the validation outcomes
         """
         pass
     
@@ -59,7 +58,7 @@ class ValidationRule(ABC):
 class LayersValidationRule(ValidationRule, ABC):
     """Abstract base class for Layers validation rules."""
     
-    def validate(self, lightburn_file: LightburnFile, file_path: Path) -> List[ValidationResult]:
+    def validate(self, lightburn_file: LightburnFile) -> List[ValidationResult]:
         results = []
         
         # Find all Layer elements using the new method

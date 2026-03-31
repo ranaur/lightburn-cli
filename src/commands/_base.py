@@ -5,6 +5,7 @@ Base class for all commands.
 from abc import ABC, abstractmethod
 import argparse
 import sys
+import traceback
 from typing import Any
 
 
@@ -47,5 +48,13 @@ class BaseCommand(ABC):
         try:
             self.execute(args)
         except Exception as e:
-            print(f"Error in {self.name} command: {e}", file=sys.stderr)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            line_number = exc_traceback.tb_lineno
+            stack_trace = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            print(f"Error in {self.name} command on line {line_number}: {e}", file=sys.stderr)
+            print("Stack trace:", file=sys.stderr)
+            for line in stack_trace:
+                print(line.strip(), file=sys.stderr)
             sys.exit(1)
+            #print(f"Error in {self.name} command: {e}", file=sys.stderr)
+

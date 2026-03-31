@@ -1,10 +1,7 @@
 """
 Example update rule for setting layer power using LayersUpdateRule.
 """
-
-from pathlib import Path
 from update_base import LayersUpdateRule, UpdateResult
-
 
 class SetPowerRule(LayersUpdateRule):
     """Update rule to set power for all layers or specific layers."""
@@ -20,7 +17,7 @@ class SetPowerRule(LayersUpdateRule):
             errors.append("Required parameter 'power' is missing")
         else:
             try:
-                power_value = float(kwargs["power"])
+                power_value = int(kwargs["power"])
                 if power_value < 0 or power_value > 100:
                     errors.append("Power must be between 0 and 100")
             except ValueError:
@@ -47,16 +44,16 @@ class SetPowerRule(LayersUpdateRule):
             return UpdateResult(False, "Power parameter is required")
         
         try:
-            power_value = float(power)
+            power_value = int(power)
         except ValueError:
             return UpdateResult(False, "Invalid power value")
         
         if power_value < 0 or power_value > 100:
-            return None
+            return UpdateResult(False, "Power value must be between 0 and 100")
         
         # Get layer information
-        current_name = layer.get("name", "")
-        current_power = layer.get("power")
+        current_name = layer.get_name()
+        current_power = layer.get_max_power()
         
         # Check if this layer should be updated
         if layer_name is not None and current_name != layer_name:
@@ -75,11 +72,11 @@ class SetPowerRule(LayersUpdateRule):
             modified=True,
             message=f"Power changed from {current_power} to {power_value}"
         )
-        result.add_change("power", current_power, str(power_value))
+        result.add_detail("power", power_value)
         
         # Apply the change if not in dry run mode
         if not dry_run:
-            layer.set("power", str(power_value))
+            layer.set_power(power_value)
         
         # Print what happened
         action = "Would update" if dry_run else "Updated"

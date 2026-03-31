@@ -3,7 +3,6 @@ Update rule for enabling/disabling layers based on #COMMENT tag using LayersUpda
 """
 
 from update_base import LayersUpdateRule, UpdateResult
-import xml.etree.ElementTree as ET
 
 class TagCommentRule(LayersUpdateRule):
     """Update rule to disable layers with #COMMENT tag and enable layers without it."""
@@ -19,14 +18,6 @@ class TagCommentRule(LayersUpdateRule):
     def get_parameter_info(self) -> dict:
         """Get information about required/optional parameters."""
         return {}
-    
-    def _get_tags_from_subname(self, subname: str) -> list:
-        """Extract all #tags from a subname string."""
-        tags = []
-        for part in subname.split(" "):
-            if part.startswith("#"):
-                tags.append(part)
-        return tags
     
     def update_layer(self, layer, dry_run: bool = False, **kwargs) -> UpdateResult:
         """Update a single layer based on #COMMENT tag."""

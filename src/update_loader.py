@@ -13,9 +13,13 @@ class UpdateLoader:
     """Loads update rules from urules directory."""
     
     def __init__(self, urules_dir: str = "urules", custom_variables_path=None):
-        self.urules_dir = Path(urules_dir)
+        urules_dir = Path(rules_dir)
+        if urules_dir.is_absolute():
+            self.urules_dir = rules_dir
+        else:
+            self.urules_dir = Path(__file__).parent / rules_dir
         self.custom_variables_path = custom_variables_path
-        self._update_rules_cache: List[UpdateRule] = None
+        self._update_rules_cache: Optional[List[UpdateRule]] = None
     
     def load_all_update_rules(self) -> List[UpdateRule]:
         """Load all update rules from the urules directory."""

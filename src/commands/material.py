@@ -2,6 +2,8 @@
 Material command for Lightburn CLI.
 """
 
+# Construct config path from material name
+from pathlib import Path
 import argparse
 import json
 import sys
@@ -60,10 +62,6 @@ class MaterialCommand(BaseCommand):
     
     def execute(self, args: argparse.Namespace) -> None:
         """Execute the material command."""
-        # Construct config path from material name
-        from pathlib import Path
-        import os
-        
         # Get user home directory
         home_dir = Path.home()
         config_dir = home_dir / ".lightburn_cli"

@@ -28,7 +28,8 @@ class ValidateCommand(BaseCommand):
         )
         parser.add_argument(
             "--rules",
-            help="Path to rules file (default: ~/.lightburn_cli/rules or all rules if not found)"
+            help="Path to rules file (default: ./vrules or all rules if not found)",
+            default="vrules"
         )
         parser.add_argument(
             "--config",
@@ -55,12 +56,8 @@ class ValidateCommand(BaseCommand):
             sys.exit(1)
         
         # Initialize rule loader
-        rules_dir = "vrules"  # Default rules directory
+        rules_dir = args.rules or "vrules"  # Default rules directory
         custom_variables_path = None
-        
-        if args.rules:
-            # If custom rules file specified, use its directory
-            rules_dir = Path(args.rules).parent
         
         if args.config:
             custom_variables_path = args.config
@@ -70,7 +67,6 @@ class ValidateCommand(BaseCommand):
         # Load Lightburn file and validate
         try:
             lightburn_file = LightburnFile(file_path)
-            results = self.validate_file(lightburn_file, rule_loader, file_path)
         except Exception as e:
             results = [{
                 "rule_name": "file_parsing",
@@ -78,6 +74,8 @@ class ValidateCommand(BaseCommand):
                 "error": f"Failed to parse file: {e}",
                 "suggestion": "Ensure the file is a valid .lbrn2 file"
             }]
+
+        results = self.validate_file(lightburn_file, rule_loader, file_path)
         
         # Format and output results
         if args.format == "json":
@@ -109,21 +107,12 @@ class ValidateCommand(BaseCommand):
             if not rule.enabled:
                 continue
                 
-            try:
-                result = rule.validate(lightburn_file, file_path)
-                # Handle rules that return multiple ValidationResult objects
-                if isinstance(result, list):
-                    for r in result:
-                        results.append(r.to_dict())
-                else:
-                    results.append(result.to_dict())
-            except Exception as e:
-                results.append({
-                    "rule_name": rule.name,
-                    "passed": False,
-                    "error": f"Rule execution failed: {e}",
-                    "suggestion": "Check rule implementation for errors"
-                })
+            result = rule.validate(lightburn_file)
+            # Handle rules that return multiple ValidationResult objects
+            if isinstance(result, list):
+                results.extend([r.to_dict() for r in result])
+            else:
+                results.append(result.to_dict())
         
         return results
     

@@ -5,6 +5,7 @@ Validation rules for Layers elements.
 from validation_base import ValidationResult, LayersValidationRule
 from lightburn_file import LightburnLayer
 from material_manager import get_variable
+from typing import Optional
 
 class LayersSubnameRule(LayersValidationRule):
     """Validates that all Layers elements have subnames."""
@@ -15,7 +16,7 @@ class LayersSubnameRule(LayersValidationRule):
         super().__init__(name, description, enabled)
         self.custom_variables_path = custom_variables_path
     
-    def validate_setting(self, setting: LightburnLayer) -> ValidationResult:
+    def validate_setting(self, setting: LightburnLayer) -> Optional[ValidationResult]:
         """Check a single Layers element for subname tag."""
         # Get name element for identification
         name = setting.get_name()
@@ -29,7 +30,7 @@ class LayersSubnameRule(LayersValidationRule):
 
         subname = setting.get_subname()
         # If no subname found, return a ValidationResult for this specific Layers
-        if subname is None:
+        if subname == "":
             return ValidationResult(
                 rule_name=self.name,
                 passed=False,
@@ -91,14 +92,14 @@ class LayersPowerRule(LayersValidationRule):
         """Validate Cut type power settings."""
         cut_power = get_variable("cut.power", self.custom_variables_path)
         if cut_power is not None:
-            if int(setting.get_min_power()) != int(engrave_power):
+            if int(setting.get_min_power()) != int(cut_power):
                 return ValidationResult(
                     rule_name=self.name,
                     passed=False,
                     error=f"minPower does not match cut.power",
                     suggestion=f"Adjusts minPower value of Layers '{name}' from {setting.get_min_power()} to {cut_power}"
                 )
-            if int(setting.get_max_power()) != int(engrave_power):
+            if int(setting.get_max_power()) != int(cut_power):
                 return ValidationResult(
                     rule_name=self.name,
                     passed=False,
@@ -114,7 +115,7 @@ class LayersPowerRule(LayersValidationRule):
                     rule_name=self.name,
                     passed=False,
                     error=f"Layers {name} must have speed equal to variable speed",
-                    suggestion=f"Adjusts speed value of Layers '{name}' from {setting.get_speed()}  to {cut_power}"
+                    suggestion=f"Adjusts speed value of Layers '{name}' from {setting.get_speed()} to {speed}"
                 )
         
         return None
@@ -146,7 +147,7 @@ class LayersPowerRule(LayersValidationRule):
                     rule_name=self.name,
                     passed=False,
                     error=f"Layers {name} must have speed equal to variable engrave.speed",
-                    suggestion=f"Adjusts speed value of Layers '{name}' to {engrave_power}"
+                    suggestion=f"Adjusts speed value of Layers '{name}' from {setting.get_speed()} to {speed}"
                 )
         
         return None
