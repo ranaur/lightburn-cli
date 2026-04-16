@@ -5,7 +5,6 @@ Validation rules for Layers elements.
 from validation_base import ValidationResult, LayersValidationRule
 from lightburn_file import LightburnLayer
 from material_manager import get_variable
-from typing import Optional
 
 class LayersSubnameRule(LayersValidationRule):
     """Validates that all Layers elements have subnames."""
